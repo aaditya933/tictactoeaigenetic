@@ -1,18 +1,6 @@
 import numpy as np
 import random
-import pygame
-import os
 import matplotlib.pyplot as plt
-
-# Pygame settings
-WIDTH, HEIGHT = 300, 300
-SQUARE_SIZE = WIDTH // 3
-LINE_WIDTH = 5
-WHITE, BLACK, RED = (255, 255, 255), (0, 0, 0), (255, 0, 0)
-
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tic Tac Toe AI Training")
 
 class GeneticAI:
     def __init__(self, population_size=100, mutation_rate=0.1, generations=1000):
@@ -25,7 +13,6 @@ class GeneticAI:
         return np.random.rand(3, 3)  # Random weights for moves
 
     def evaluate(self, strategy):
-        """Improved fitness function for AI"""
         score = 0
         for _ in range(10):  # Simulate 10 games per strategy
             board = [[None] * 3 for _ in range(3)]
@@ -39,32 +26,28 @@ class GeneticAI:
         return score
 
     def simulate_game(self, strategy, board):
-        """Visualize AI playing Tic-Tac-Toe"""
-        screen.fill(WHITE)
-        draw_grid()
+           for _ in range(9):
+               move = self.select_best_move(strategy, board)
+               if move is None:
+                   break
+               row, col = move
+               board[row][col] = 'X'
+               # draw_board(board)
+               # pygame.display.update()
+               # pygame.time.delay(500)  # Show move for better visualization
+   
+               if self.check_winner(board, 'X'):
+                   return "win"
+   
+               self.random_opponent_move(board)
+            # draw_board(board)
+               # pygame.display.update()
+            # pygame.time.delay(500)
 
-        for _ in range(9):
-            move = self.select_best_move(strategy, board)
-            if move is None:
-                break
-            row, col = move
-            board[row][col] = 'X'
-            draw_board(board)
-            pygame.display.update()
-            pygame.time.delay(500)  # Show move for better visualization
+               if self.check_winner(board, 'O'):
+                   return "loss"
+           return "draw"
 
-            if self.check_winner(board, 'X'):
-                return "win"
-
-            self.random_opponent_move(board)
-            draw_board(board)
-            pygame.display.update()
-            pygame.time.delay(500)
-
-            if self.check_winner(board, 'O'):
-                return "loss"
-
-        return "draw"
 
     def select_best_move(self, strategy, board):
         """Select the best move based on strategy values."""
@@ -72,9 +55,10 @@ class GeneticAI:
         best_move = None
         for row in range(3):
             for col in range(3):
-                if board[row][col] is None and strategy[row][col] > best_score:
-                    best_score = strategy[row][col]
-                    best_move = (row, col)
+                if board[row][col] is None:
+                    if strategy[row][col] > best_score:
+                        best_score = strategy[row][col]
+                        best_move = (row, col)
         return best_move
 
     def random_opponent_move(self, board):
@@ -121,61 +105,34 @@ class GeneticAI:
         return max(self.population, key=self.evaluate)
 
     def visualize_learning(self):
-        """Train AI and save the best strategy."""
+        """Visualize fitness progression over generations."""
         fitness_progress = []
-
-        for generation in range(self.generations):
+        for _ in range(self.generations):
             self.evolve()
             best_strategy = self.get_best_strategy()
-            best_fitness = self.evaluate(best_strategy)
+            best_fitness = self.evaluate(self.get_best_strategy())
             fitness_progress.append(best_fitness)
-            if self.generations%10==0:
-                print(self.generations/10)
-            
-            print(f"Generation {generation + 1}/{self.generations} - Best Fitness: {best_fitness}")
 
-            # Visualize AI playing Tic-Tac-Toe
-            board = [[None] * 3 for _ in range(3)]
-            self.simulate_game(best_strategy, board)
-
-        # Save best AI
+       
         np.save("best_strategy.npy", best_strategy)
         print("Training complete! Best strategy saved as best_strategy.npy")
 
-        # Plot training progress
+    # Plot training progress
         plt.plot(fitness_progress)
         plt.xlabel("Generations")
         plt.ylabel("Best Fitness Score")
         plt.title("Genetic Algorithm Training Progress")
-        plt.savefig("training_progress.png")
+        plt.savefig("training_progress.png")  # Save plot instead of showing it
         plt.close()
 
-# Pygame visualization functions
-def draw_grid():
-    """Draws the Tic-Tac-Toe grid."""
-    for i in range(1, 3):
-        pygame.draw.line(screen, BLACK, (0, i * SQUARE_SIZE), (WIDTH, i * SQUARE_SIZE), LINE_WIDTH)
-        pygame.draw.line(screen, BLACK, (i * SQUARE_SIZE, 0), (i * SQUARE_SIZE, HEIGHT), LINE_WIDTH)
 
-def draw_board(board):
-    """Draws the board with Xs and Os."""
-    screen.fill(WHITE)
-    draw_grid()
-    for row in range(3):
-        for col in range(3):
-            if board[row][col] == "X":
-                pygame.draw.line(screen, BLACK, (col * SQUARE_SIZE + 20, row * SQUARE_SIZE + 20),
-                                 (col * SQUARE_SIZE + SQUARE_SIZE - 20, row * SQUARE_SIZE + SQUARE_SIZE - 20), LINE_WIDTH)
-                pygame.draw.line(screen, BLACK, (col * SQUARE_SIZE + SQUARE_SIZE - 20, row * SQUARE_SIZE + 20),
-                                 (col * SQUARE_SIZE + 20, row * SQUARE_SIZE + SQUARE_SIZE - 20), LINE_WIDTH)
-            elif board[row][col] == "O":
-                pygame.draw.circle(screen, RED, 
-                                   (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2), 
-                                   SQUARE_SIZE // 3, LINE_WIDTH)
-    pygame.display.update()
 
-# Run training and visualization
+
+    def get_ai_move(self, board):
+        """Return the AI's best move for the current board state."""
+        best_strategy = self.get_best_strategy()
+        return self.select_best_move(best_strategy, board)
+
 if __name__ == "__main__":
     ai = GeneticAI()
     ai.visualize_learning()
-    pygame.quit()
