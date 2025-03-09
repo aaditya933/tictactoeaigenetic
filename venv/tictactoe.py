@@ -1,5 +1,6 @@
 import pygame
 import sys
+from tic_tac_toe_ai import GeneticAI
 
 # Initialize pygame
 pygame.init()
@@ -31,6 +32,7 @@ screen.fill(BG_COLOR)
 board = [[None for _ in range(BOARD_COLS)] for _ in range(BOARD_ROWS)]
 current_player = "X"
 paused = False
+ai = GeneticAI()
 
 # Draw grid
 for row in range(1, BOARD_ROWS):
